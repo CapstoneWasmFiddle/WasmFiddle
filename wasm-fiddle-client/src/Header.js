@@ -24,7 +24,7 @@ export default function Header() {
 
   return (
       <AppBar position="static">
-        <Toolbar>
+        <Toolbar data-cy='headerHeader'>
           <Typography variant="h4" 
             component="div" sx={{ flexGrow: 1 }}>
             WasmFiddle
@@ -36,18 +36,19 @@ export default function Header() {
             aria-label="question"
             sx={{ mr: 2}}
             onClick={toggleQuestionState}
+            data-cy="headerQuestionButton"
           >
             <HelpOutlineIcon/>
             <Dialog open={openQuestion}>
-                <DialogTitle>How to use the project</DialogTitle>
-                <DialogContent>
+                <DialogTitle data-cy="headerQuestionDialogTitle">How to use the project</DialogTitle>
+                <DialogContent data-cy="headerQuestionDialogContent">
                     First, choose a language between C, C++ and Rust to enter into the input box.
                     Then, enter valid code in that language and click build followed by run. Your
                     code will be compiled and the result will be displayed to you in the output box.
                     Happy coding!
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={toggleQuestionState} color="inherit">
+                    <Button onClick={toggleQuestionState} color="inherit" data-cy="headerQuestionDialogClose">
                         Close
                     </Button>
                 </DialogActions>
@@ -60,11 +61,12 @@ export default function Header() {
             aria-label="info"
             sx={{ mr: 2}}
             onClick={toggleAboutState}
+            data-cy="headerAboutButton"
           >
             <InfoOutlinedIcon/>
             <Dialog open={openAbout}>
-                <DialogTitle>About the project</DialogTitle>
-                <DialogContent>
+                <DialogTitle data-cy="headerAboutDialogTitle">About the project</DialogTitle>
+                <DialogContent data-cy="headerAboutDialogContent">
                     This project was developed as part of the Capstone project for the
                     BS in Computer Science at Oregon State University. It functions as a
                     WebAssembly equivalent to JSFiddle as it allows them to write and edit
@@ -72,7 +74,7 @@ export default function Header() {
                     browser as well. 
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={toggleAboutState} color="inherit">
+                    <Button onClick={toggleAboutState} color="inherit" data-cy="headerAboutDialogClose">
                         Close
                     </Button>
                 </DialogActions>
