@@ -4,7 +4,7 @@ describe('Cypress E2E Testing', () => {
         cy.visit('/');
     })
     
-    it('Visits main page and tests header', () => {
+    it('Visits main page and test header', () => {
         
         // Ensure header appears and that the project name appears on header
         cy.get('[data-cy=headerHeader]').contains('WasmFiddle');
