@@ -15,6 +15,7 @@ import { fileURLToPath } from "url";
  *
  * @returns {Promise} - A promise that resolves to the name of the compiled file
  */
+// TODO - Use fileType
 export async function compileToWasm(fileName, fileType = "js") {
   const command = `emcc ${fileName}`;
   const { error, stdout, stderr } = await exec(command);
