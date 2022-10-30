@@ -14,6 +14,7 @@ export default function CodeEditor() {
     const [output, setOutput] = React.useState("Output will display here when ready!");
     const [build, setBuild] = React.useState(false);
     const [run, setRun] = React.useState(false);
+    const [buildError, setBuildError] = React.useState(false);
     const [language, setLanguage] = React.useState("");
     const [compilation, setCompilation] = React.useState("");
     const onChange = React.useCallback((value, viewUpdate) => {
@@ -21,8 +22,17 @@ export default function CodeEditor() {
     }, []);
     
     const toggleBuildState = () => {
-        setBuild(!build);
-        console.log(build);
+        if (language !== "wasm" && language !== "wat" && compilation !== ""){
+            setBuildError(false);
+            setBuild(!build);
+        }
+        else if (language === "wasm" || language === "wat"){
+            setBuildError(false);
+            setBuild(!build);
+        }
+        else {
+            setBuildError(true);
+        }
     }
 
     const toggleRunState = () => {
@@ -45,7 +55,7 @@ export default function CodeEditor() {
     return (
         <>
             <Stack spacing={1} justifyContent="center" alignItems="center">
-                {build === false &&
+                {build === false && buildError === false &&
                     <Alert severity="info" sx={{ m: 1 }}>Choose a language and compilation option, enter your code, then click build and run!</Alert>
                 }
                 {build === true && 
@@ -53,6 +63,9 @@ export default function CodeEditor() {
                 }
                 {run === true &&
                     <Alert severity="success" sx={{ m: 1 }}>Run successful!</Alert>
+                }
+                {buildError === true &&
+                    <Alert severity="error" sx={{m:1}}>Build has failed. Either choose a language or compilation option or recheck syntax.</Alert>
                 }
                 <Grid container spacing={2} justifyContent="center" alignItems="center">
                     <Grid item>
@@ -65,6 +78,8 @@ export default function CodeEditor() {
                             <MenuItem value={"c"}>C</MenuItem>
                             <MenuItem value={"cpp"}>C++</MenuItem>
                             <MenuItem value={"rust"}>Rust</MenuItem>
+                            <MenuItem value={"wat"}>Wat</MenuItem>
+                            <MenuItem value={"wasm"}>Wasm</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
@@ -81,6 +96,9 @@ export default function CodeEditor() {
                                 {language === "cpp" &&
                                     <MenuItem value={"gpp"}>gpp</MenuItem>
                                 }
+                                {language === "rust" &&
+                                    <MenuItem value={"rustc"}>rustc</MenuItem>
+                                }
                             </Select>
                         </FormControl>
                     </Grid>
@@ -95,18 +113,38 @@ export default function CodeEditor() {
                 </Grid>
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
-                        <CodeMirror
-                            height="300px"
-                            onChange={onChange}
-                            placeholder="You can input C, C++ or Rust code here!"
-                        />
+                        {language !== "wat" && language !== "wasm" && 
+                            <CodeMirror
+                                height="300px"
+                                onChange={onChange}
+                                placeholder="You can input C, C++ or Rust code here! Choose it in the dropdown along with a compilation option!"
+                            />
+                        }
+                        {(language === "wat" || language === "wasm") &&
+                            <CodeMirror
+                                height="300px"
+                                onChange={onChange}
+                                placeholder="Please enter your Wat or Wasm code in the right input box!"
+                                editable={false}
+                            />
+                        }
                     </Grid>
                     <Grid item xs={6}>
-                        <CodeMirror
+                        {(language === "wat" || language === "wasm") && 
+                            <CodeMirror
                             height="300px"
                             onChange={onChange}
-                            placeholder="You can input Wat or Wasm code here!"
-                        />
+                            placeholder="You do not need a compilation option. Please write your Wat or Wasm code here."
+                            />
+                        }
+                        {language !== "wat" && language !== "wasm" &&
+                            <CodeMirror
+                            height="300px"
+                            onChange={onChange}
+                            placeholder="We will display the Wat or Wasm code here."
+                            editable={false}
+                            />
+                        }
                     </Grid>
                 </Grid>
                 <Grid container spacing={2} justifyContent="center" alignItems="center">

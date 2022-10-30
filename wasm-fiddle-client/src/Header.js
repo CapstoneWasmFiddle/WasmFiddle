@@ -10,6 +10,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import Logo from "./logo.png";
 
 export default function Header() {
 
@@ -25,8 +26,9 @@ export default function Header() {
   return (
       <AppBar position="static">
         <Toolbar data-cy='headerHeader'>
+          <img src={Logo} alt="logo" width="50" height="50" border="2"/>
           <Typography variant="h4" 
-            component="div" sx={{ flexGrow: 1 }}>
+            component="div" sx={{ flexGrow: 1, ml: 2 }}>
             WasmFiddle
           </Typography>
           <IconButton
