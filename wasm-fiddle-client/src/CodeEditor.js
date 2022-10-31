@@ -56,16 +56,16 @@ export default function CodeEditor() {
         <>
             <Stack spacing={1} justifyContent="center" alignItems="center">
                 {build === false && buildError === false &&
-                    <Alert severity="info" sx={{ m: 1 }}>Choose a language and compilation option, enter your code, then click build and run!</Alert>
+                    <Alert severity="info" sx={{ m: 1 }} data-cy="infoAlert">Choose a language and compilation option, enter your code, then click build and run!</Alert>
                 }
                 {build === true && 
-                    <Alert severity="success" sx={{ m: 1 }}>Build succesful!</Alert>
+                    <Alert severity="success" sx={{ m: 1 }} data-cy="buildSuccessAlert">Build succesful!</Alert>
                 }
                 {run === true &&
-                    <Alert severity="success" sx={{ m: 1 }}>Run successful!</Alert>
+                    <Alert severity="success" sx={{ m: 1 }} data-cy="runSuccessAlert">Run succesful!</Alert>
                 }
                 {buildError === true &&
-                    <Alert severity="error" sx={{m:1}}>Build has failed. Either choose a language or compilation option or recheck syntax.</Alert>
+                    <Alert severity="error" sx={{m:1}} data-cy="buildFailAlert">Build has failed. Either choose a language or compilation option or recheck syntax.</Alert>
                 }
                 <Grid container spacing={2} justifyContent="center" alignItems="center">
                     <Grid item>
@@ -74,12 +74,13 @@ export default function CodeEditor() {
                                 value={language}
                                 onChange={handleLanguage}
                                 label="Language"
+                                data-cy="languageDropdown"
                             >
-                            <MenuItem value={"c"}>C</MenuItem>
-                            <MenuItem value={"cpp"}>C++</MenuItem>
-                            <MenuItem value={"rust"}>Rust</MenuItem>
-                            <MenuItem value={"wat"}>Wat</MenuItem>
-                            <MenuItem value={"wasm"}>Wasm</MenuItem>
+                            <MenuItem value={"c"} data-cy="languageDropdownC">C</MenuItem>
+                            <MenuItem value={"cpp"} data-cy="languageDropdownCpp">C++</MenuItem>
+                            <MenuItem value={"rust"} data-cy="languageDropdownRust">Rust</MenuItem>
+                            <MenuItem value={"wat"} data-cy="languageDropdownWat">Wat</MenuItem>
+                            <MenuItem value={"wasm"} data-cy="languageDropdownWasm">Wasm</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
@@ -89,15 +90,16 @@ export default function CodeEditor() {
                                 value={compilation}
                                 onChange={handleCompilation}
                                 label="Compilation"
+                                data-cy="compilationDropdown"
                             >   
                                 {language === "c" &&
-                                    <MenuItem value={"gcc"}>gcc</MenuItem>
+                                    <MenuItem value={"gcc"} data-cy="dropdownGcc">gcc</MenuItem>
                                 }
                                 {language === "cpp" &&
-                                    <MenuItem value={"gpp"}>gpp</MenuItem>
+                                    <MenuItem value={"gpp"} data-cy="dropdownGpp">gpp</MenuItem>
                                 }
                                 {language === "rust" &&
-                                    <MenuItem value={"rustc"}>rustc</MenuItem>
+                                    <MenuItem value={"rustc"} data-cy="dropdownRustc">rustc</MenuItem>
                                 }
                             </Select>
                         </FormControl>
@@ -118,6 +120,12 @@ export default function CodeEditor() {
                                 height="300px"
                                 onChange={onChange}
                                 placeholder="You can input C, C++ or Rust code here! Choose it in the dropdown along with a compilation option!"
+                                options={{
+                                    lint: true,
+                                    mode: {language},
+                                    gutters: ['CodeMirror-lint-markers']
+                                }}
+                                data-cy="mainInputEditor"
                             />
                         }
                         {(language === "wat" || language === "wasm") &&
@@ -126,6 +134,7 @@ export default function CodeEditor() {
                                 onChange={onChange}
                                 placeholder="Please enter your Wat or Wasm code in the right input box!"
                                 editable={false}
+                                data-cy="mainInputEditor"
                             />
                         }
                     </Grid>
@@ -135,6 +144,12 @@ export default function CodeEditor() {
                             height="300px"
                             onChange={onChange}
                             placeholder="You do not need a compilation option. Please write your Wat or Wasm code here."
+                            options={{
+                                lint: true,
+                                mode: {language},
+                                gutters: ['CodeMirror-lint-markers']
+                            }}
+                            data-cy="wasmEditor"
                             />
                         }
                         {language !== "wat" && language !== "wasm" &&
@@ -143,6 +158,7 @@ export default function CodeEditor() {
                             onChange={onChange}
                             placeholder="We will display the Wat or Wasm code here."
                             editable={false}
+                            data-cy="wasmEditor"
                             />
                         }
                     </Grid>
@@ -166,6 +182,7 @@ export default function CodeEditor() {
                             value={output}
                             editable={false}
                             onUpdate={output}
+                            data-cy="outputEditor"
                         />
                     </Grid>
                 </Grid>
