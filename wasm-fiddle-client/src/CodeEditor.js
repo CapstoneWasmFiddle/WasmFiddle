@@ -120,11 +120,6 @@ export default function CodeEditor() {
                                 height="300px"
                                 onChange={onChange}
                                 placeholder="You can input C, C++ or Rust code here! Choose it in the dropdown along with a compilation option!"
-                                options={{
-                                    lint: true,
-                                    mode: {language},
-                                    gutters: ['CodeMirror-lint-markers']
-                                }}
                                 data-cy="mainInputEditor"
                             />
                         }
@@ -144,11 +139,6 @@ export default function CodeEditor() {
                             height="300px"
                             onChange={onChange}
                             placeholder="You do not need a compilation option. Please write your Wat or Wasm code here."
-                            options={{
-                                lint: true,
-                                mode: {language},
-                                gutters: ['CodeMirror-lint-markers']
-                            }}
                             data-cy="wasmEditor"
                             />
                         }
