@@ -1,5 +1,5 @@
 import { exec } from "child_process";
-import { mkdirSync, writeFileSync } from "fs";
+import { mkdirSync, writeFileSync, unlink } from "fs";
 import { dirname, join } from "path";
 import { nanoid } from "nanoid";
 import { fileURLToPath } from "url";
@@ -17,11 +17,17 @@ import { fileURLToPath } from "url";
  */
 // TODO - Use fileType
 export async function compileToWasm(fileName, fileType = "js") {
-  const command = `emcc ${fileName}`;
+  // will need to accomodate built in emscripten
+  let command = `docker run --platform linux/amd64\
+    --rm \
+    -v $(pwd):/src \
+    -u $(id -u):$(id -g) \
+    emscripten/emsdk \
+    emcc ${fileName} -o ${fileName}.${fileType}`;
   const { error, stdout, stderr } = await exec(command);
   if (error) {
-    console.error(`Failed to compile: ${error.message}`);
-    console.error(`Exited with code: ${error.code}`);
+    console.log(`Failed to compile: ${error.message}`);
+    console.log(`Exited with code: ${error.code}`);
   }
   console.log("stdout: ", stdout);
   console.log("stderr: ", stderr);
@@ -47,9 +53,17 @@ export function createFile(filePath, fileContents) {
 /*
     * @param {string} data - The data to write to the file
     Uses nanoid to generate a unique file name, creates a new file, and writes the data to that file.
+    * @param {string} fileType - The type of file to create
  */
-export function createRandomFileWithData(data) {
+export function createRandomFileWithData(data, fileType="c") {
   const fileName = nanoid();
-  createFile(fileName, data);
+  createFile(`${fileName}.${fileType}`, data);
   return fileName;
+}
+
+/*
+ * @param {string} filePath - The path to the file to delete
+ */
+export function deleteFile(filePath) {
+  unlink(filePath);
 }

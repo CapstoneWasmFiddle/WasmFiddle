@@ -11,11 +11,12 @@ import chai from "chai";
 import chaiFs from "chai-fs";
 
 chai.use(chaiFs);
-
+ 
 describe("compileToJs", () => {
   it("should compile a simple wasm file", async () => {
-    await compileToWasm("./testFiles/hello_world.c");
+    await compileToWasm("./test/testFiles/hello_world.c", "wasm");
   });
+  
 
   it("should create a new directory", async () => {
     const __dirname = dirname(fileURLToPath(import.meta.url));
