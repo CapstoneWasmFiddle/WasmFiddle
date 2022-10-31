@@ -21,6 +21,11 @@ describe('Cypress E2E Testing', () => {
         cy.get('[data-cy=headerAboutDialogContent]').contains('C, C++, or Rust');
         cy.get('[data-cy=headerAboutDialogClose]').click();
 
+        // Test widget button functionality
+        cy.get('[data-cy=headerWidgetButton]').click();
+        cy.get('[data-cy=headerWidgetDialogTitle]').contains('Widget')
+        cy.get('[data-cy=headerWidgetDialogClose').click();
+
     })
 
     it('Tests dropdown controls, alert messages, and building and running buttons for C', () => {
