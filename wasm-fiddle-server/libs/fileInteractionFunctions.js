@@ -23,14 +23,15 @@ export async function compileToWasm(fileName, fileType = "js") {
     -v $(pwd):/src \
     -u $(id -u):$(id -g) \
     emscripten/emsdk \
-    emcc ${fileName} -o ${fileName}.${fileType}`;
-  const { error, stdout, stderr } = await exec(command);
+    emcc ${fileName}.c -o ${fileName}.${fileType}`;
+  const {error, stdout, stderr} = await exec(command);
+
   if (error) {
     console.log(`Failed to compile: ${error.message}`);
     console.log(`Exited with code: ${error.code}`);
   }
-  console.log("stdout: ", stdout);
-  console.log("stderr: ", stderr);
+  // console.log("stdout: ", stdout);
+  // console.log("stderr: ", stderr);
 }
 
 /*
