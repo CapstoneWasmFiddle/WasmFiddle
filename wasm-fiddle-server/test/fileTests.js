@@ -26,20 +26,20 @@ describe("compileToJs", () => {
     rmdirSync(path);
   });
 
-  it("should create a new file", async () => {
+  it("should create a new file in the files directory", async () => {
     const __dirname = dirname(fileURLToPath(import.meta.url));
-    const path = join(__dirname, "..", "test/testFile.txt");
-    createFile("test/testFile.txt", "Hello World!");
+    const path = join(__dirname, "..", "files/testFile.txt");
+    createFile("files/testFile.txt", "Hello World!");
     chai.expect(path).to.be.a.file().with.content("Hello World!");
-    rmSync("test/testFile.txt");
+    rmSync("files/testFile.txt");
   });
 
   it("Should create a random file with data", async () => {
     const data = "Hello World!";
     const fileName = createRandomFileWithData(data);
     const __dirname = dirname(fileURLToPath(import.meta.url));
-    const path = join(__dirname, "..", fileName);
+    const path = join(__dirname, "..", "files", fileName);
     chai.expect(path).to.be.a.file().with.content(data);
-    rmSync(fileName);
+    rmSync(path);
   });
 });

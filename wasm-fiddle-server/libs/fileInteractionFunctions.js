@@ -48,8 +48,10 @@ export function createFile(filePath, fileContents) {
     * @param {string} data - The data to write to the file
     Uses nanoid to generate a unique file name, creates a new file, and writes the data to that file.
  */
-export function createRandomFileWithData(data) {
+export function createRandomFileWithData(data, filePath = "files") {
   const fileName = nanoid();
-  createFile(fileName, data);
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", filePath, fileName);
+  createFile(path, data);
   return fileName;
 }
