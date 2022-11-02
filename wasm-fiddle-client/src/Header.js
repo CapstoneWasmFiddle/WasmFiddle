@@ -6,27 +6,35 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import Logo from "./logo.png";
 
 export default function Header() {
 
     const [openAbout, setOpenAbout] = React.useState(false);
     const [openQuestion, setOpenQuestion] = React.useState(false);
+    const [openWidget, setOpenWidget] = React.useState(false);
+
     const toggleAboutState = () => {
         setOpenAbout(!openAbout);
     };
     const toggleQuestionState = () => {
         setOpenQuestion(!openQuestion);
     }
+    const toggleWidgetState = () => {
+      setOpenWidget(!openWidget);
+    }
 
   return (
       <AppBar position="static">
         <Toolbar data-cy='headerHeader'>
+          <img src={Logo} alt="logo" width="50" height="50" border="2"/>
           <Typography variant="h4" 
-            component="div" sx={{ flexGrow: 1 }}>
+            component="div" sx={{ flexGrow: 1, ml: 2 }}>
             WasmFiddle
           </Typography>
           <IconButton
@@ -79,6 +87,29 @@ export default function Header() {
                     </Button>
                 </DialogActions>
             </Dialog>
+          </IconButton>
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="widget"
+            sx={{ mr: 2}}
+            onClick={toggleWidgetState}
+            data-cy="headerWidgetButton"
+          >
+              <WidgetsOutlinedIcon/>
+              <Dialog open={openWidget}>
+                <DialogTitle data-cy="headerWidgetDialogTitle">Embedable Widget</DialogTitle>
+                <DialogContent>
+
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={toggleWidgetState} color="inherit" data-cy="headerWidgetDialogClose">
+                    Close
+                  </Button>
+                </DialogActions>
+              </Dialog>
+
           </IconButton>
         </Toolbar>
       </AppBar>
