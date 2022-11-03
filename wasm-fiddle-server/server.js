@@ -41,6 +41,8 @@ app.post("/compile", async (req, res) => {
   setTimeout(() => {
     res.sendFile(__dirname + `/${fn}.wasm`);
   }, 5000);
+
+  // TODO - delete files after sending
 })
 
 app.listen(port, () =>
