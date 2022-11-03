@@ -1,5 +1,5 @@
 import { exec } from "child_process";
-import { mkdirSync, writeFileSync, unlink } from "fs";
+import { mkdirSync, writeFileSync, unlink, existsSync } from "fs";
 import { dirname, join } from "path";
 import { nanoid } from "nanoid";
 import { fileURLToPath } from "url";
@@ -18,11 +18,19 @@ import { fileURLToPath } from "url";
  */
 export async function compileToWasm(filePath, language, fileType = "js") {
   const suffix = matchLanguage(language);
-  const command = `emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
+  const command = `docker run --platform linux/amd64 \
+    --rm \
+    -v $(pwd):/src \
+    -u $(id -u):$(id -g) \
+    emscripten/emsdk \
+    emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
+    
+  console.log(command);
+
   const { error, stdout, stderr } = await exec(command);
   if (error) {
-    console.log(`Failed to compile: ${error.message}`);
-    console.log(`Exited with code: ${error.code}`);
+    console.error(`Failed to compile: ${error.message}`);
+    console.error(`Exited with code: ${error.code}`);
   }
   // console.log("stdout: ", stdout);
   // console.log("stderr: ", stderr);
