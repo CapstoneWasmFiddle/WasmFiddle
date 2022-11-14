@@ -1,5 +1,5 @@
 import { exec } from "child_process";
-import { mkdirSync, writeFileSync } from "fs";
+import { mkdirSync, writeFileSync, unlink, existsSync } from "fs";
 import { dirname, join } from "path";
 import { nanoid } from "nanoid";
 import { fileURLToPath } from "url";
@@ -16,17 +16,24 @@ import { fileURLToPath } from "url";
  *
  * @returns {Promise} - A promise that resolves to the name of the compiled file
  */
-// TODO - Use fileType
 export async function compileToWasm(filePath, language, fileType = "js") {
   const suffix = matchLanguage(language);
-  const command = `emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
+  const command = `docker run --platform linux/amd64 \
+    --rm \
+    -v $(pwd):/src \
+    -u $(id -u):$(id -g) \
+    emscripten/emsdk \
+    emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
+    
+  console.log(command);
+
   const { error, stdout, stderr } = await exec(command);
   if (error) {
     console.error(`Failed to compile: ${error.message}`);
     console.error(`Exited with code: ${error.code}`);
   }
-  console.log("stdout: ", stdout);
-  console.log("stderr: ", stderr);
+  // console.log("stdout: ", stdout);
+  // console.log("stderr: ", stderr);
 }
 
 /*
@@ -49,6 +56,7 @@ export function createFile(filePath, fileContents) {
 /*
     * @param {string} data - The data to write to the file
     Uses nanoid to generate a unique file name, creates a new file, and writes the data to that file.
+    * @param {string} fileType - The type of file to create
  */
 export function createRandomFileWithData(data, language, filePath = "files") {
   let fileName = nanoid();
