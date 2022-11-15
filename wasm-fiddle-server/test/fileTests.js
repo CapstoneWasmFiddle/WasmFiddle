@@ -2,6 +2,7 @@ import {
   compileToWasm,
   createFile,
   createRandomFileWithData,
+  createRandomRustProjectWithData,
   createDir,
   matchLanguage,
 } from "../libs/fileInteractionFunctions.js";
@@ -12,12 +13,11 @@ import chai from "chai";
 import chaiFs from "chai-fs";
 
 chai.use(chaiFs);
- 
+
 describe("compileToJs", () => {
   it("should compile a simple wasm file", async () => {
     await compileToWasm("./test/testFiles/hello_world.c", "wasm");
   });
-  
 
   it("should create a new directory", async () => {
     const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -73,5 +73,25 @@ describe("compileToJs", () => {
       rmSync(wasmPath);
     }
     rmSync(path);
+  });
+
+  it("Should create a random rust library", async () => {
+    const fileName = await createRandomRustProjectWithData("Hello World!");
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const path = join(__dirname, "..", "files", fileName, "src");
+    await new Promise((r) => setTimeout(r, 1000));
+    console.log(path);
+    chai.expect(path).to.be.a.directory().with.files(["lib.rs"]);
+    // rmSync(path, { recursive: true });
+  });
+
+  it("Should modify a rust project to contain the given file data", async () => {
+    const fileName = await createRandomRustProjectWithData("Hello World!");
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const toml = join(__dirname, "..", "files", fileName, "Cargo.toml");
+    console.log(toml);
+    await new Promise((r) => setTimeout(r, 1000));
+    const contents = `[package]\nname = "${fileName}"\nversion = "0.1.0"\nedition = "2021"\n\n# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n\n[dependencies]\nwasm-bindgen = "0.2.83"\n[lib]\ncrate-type = ["cdylib"]\n`;
+    chai.expect(toml).to.be.a.file().with.contents(contents);
   });
 });
