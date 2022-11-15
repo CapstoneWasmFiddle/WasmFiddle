@@ -1,8 +1,9 @@
 import { exec } from "child_process";
-import { mkdirSync, writeFileSync, unlink, existsSync } from "fs";
+import { mkdirSync, writeFileSync, unlink, access, watch, constants} from "fs";
 import { dirname, join } from "path";
 import { nanoid } from "nanoid";
 import { fileURLToPath } from "url";
+import path from "path";
 
 // Takes a C/C++ file as a parameter, spawns a shell, and invokes emscripten to compile to js
 /*
@@ -24,8 +25,6 @@ export async function compileToWasm(filePath, language, fileType = "js") {
     -u $(id -u):$(id -g) \
     emscripten/emsdk \
     emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
-    
-  console.log(command);
 
   const { error, stdout, stderr } = await exec(command);
   if (error) {
@@ -76,4 +75,39 @@ export function matchLanguage(language) {
   } else if (language === "rust") {
     return "rs";
   }
+}
+
+/*
+  * @param {string} filePath - The path to the compiled file 
+  * @param {int} fileContents - Number of ms to wait for file to be compiled
+  * Taken from 
+  * https://stackoverflow.com/questions/26165725/nodejs-check-file-exists-if-not-wait-till-it-exist
+  */
+export function checkExistsWithTimeout(filePath, timeout) {
+  console.log(filePath);
+  return new Promise(function (resolve, reject) {
+
+      var timer = setTimeout(function () {
+          watcher.close();
+          reject(new Error('File did not exists and was not created during the timeout.'));
+      }, timeout);
+
+      access(filePath, constants.R_OK, function (err) {
+          if (!err) {
+              clearTimeout(timer);
+              watcher.close();
+              resolve();
+          }
+      });
+
+      var dir = path.dirname(filePath);
+      var basename = path.basename(filePath);
+      var watcher = watch(dir, function (eventType, filename) {
+          if (eventType === 'rename' && filename === basename) {
+              clearTimeout(timer);
+              watcher.close();
+              resolve();
+          }
+      });
+  });
 }

@@ -5,7 +5,8 @@ import { fileURLToPath } from "url";
 import { 
   compileToWasm, 
   createRandomFileWithData, 
-  createDir
+  createDir,
+  checkExistsWithTimeout
   } from "./libs/fileInteractionFunctions.js";
 
 const app = express();
@@ -35,11 +36,16 @@ app.post("/compile", async (req, res) => {
   // compile to standalone wasm file
   await compileToWasm(`./files/${fn}`, req.body.language, "wasm");
   
-  // TODO - should not hardcode timeout. Needs to wait until compilation or an error 
-  // need to timeout for a few seconds to wait for compilation
-  setTimeout(() => {
+  // wait 7 seconds for compilation
+  let test = checkExistsWithTimeout(__dirname + `/files/${fn}.wasm`, 7000);
+  test.then(() => {
+    console.log("Successfully compiled");
     res.sendFile(__dirname + `/files/${fn}.wasm`);
-  }, 7000);
+  })
+    .catch((err) => {
+      console.error(`Could not find file - ${err.message}`);
+      res.send("Unable to compile within 7000ms");
+  })
 
   // TODO - delete files after sending
 })
