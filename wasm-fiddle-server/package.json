@@ -1,0 +1,30 @@
+{
+  "name": "wasm-fiddle-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "lint-staged": {
+    "wasm-fiddle-server/**/*.{js,json,css,scss,html,md}": [
+      "yarn prettier --write"
+    ]
+  },
+  "dependencies": {
+    "chai": "^4.3.6",
+    "chai-fs": "^2.0.0",
+    "express": "^4.18.2",
+    "mocha": "^10.1.0",
+    "nanoid": "^4.0.0",
+    "prettier": "^2.7.1"
+  },
+  "devDependencies": {
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "nodemon": "^2.0.20"
+  },
+  "scripts": {
+    "test": "mocha",
+    "start": "nodemon server.js",
+    "prepare": "husky install"
+  }
+}
