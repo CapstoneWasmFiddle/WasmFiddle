@@ -5,6 +5,7 @@ import {
   createRandomRustProjectWithData,
   createDir,
   matchLanguage,
+  compileRustToWasm,
 } from "../libs/fileInteractionFunctions.js";
 import { dirname, join } from "path";
 import { rmdirSync, rmSync } from "fs";
@@ -86,12 +87,24 @@ describe("compileToJs", () => {
   });
 
   it("Should modify a rust project to contain the given file data", async () => {
-    const fileName = await createRandomRustProjectWithData("Hello World!");
+    const fileName = await compileRustToWasm(
+      'use wasm_bindgen::prelude::*;\n\nfn main() {\n\tprintln!("Hello World!");\n}'
+    );
     const __dirname = dirname(fileURLToPath(import.meta.url));
     const toml = join(__dirname, "..", "files", fileName, "Cargo.toml");
     console.log(toml);
     await new Promise((r) => setTimeout(r, 1000));
-    const contents = `[package]\nname = "${fileName}"\nversion = "0.1.0"\nedition = "2021"\n\n# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n\n[dependencies]\nwasm-bindgen = "0.2.83"\n[lib]\ncrate-type = ["cdylib"]\n`;
-    chai.expect(toml).to.be.a.file().with.contents(contents);
+    chai.expect(toml).to.be.a.file();
   });
+
+  it("Should compile a rust project to wasm", async () => {
+    const fileName = await compileRustToWasm(
+      'use wasm_bindgen::prelude::*;\n\nfn main() {\n\tprintln!("Hello World!");\n}'
+    );
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const toml = join(__dirname, "..", "files", fileName, "Cargo.toml");
+    console.log(toml);
+    await new Promise((r) => setTimeout(r, 1000));
+    chai.expect(toml).to.be.a.file();
+  }).timeout(15000);
 });

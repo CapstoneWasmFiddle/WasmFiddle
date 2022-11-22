@@ -1,14 +1,8 @@
 import { exec } from "child_process";
-import {
-  appendFileSync,
-  mkdirSync,
-  writeFileSync,
-  access,
-  watch,
-  constants,
-} from "fs";
+import { mkdirSync, writeFileSync, access, watch, constants } from "fs";
 import { dirname, join } from "path";
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
+import { lowercase } from "nanoid-dictionary";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -35,24 +29,17 @@ export async function compileToWasm(filePath, language, fileType = "js") {
   }
 }
 
-export async function compileRustToWasm(filePath) {
+export async function compileRustToWasm(data) {
   // Create new rust project
-  const { error } = await exec(`cargo new ${filePath}`);
-  if (error) {
-    console.error(`Failed to create new rust project: ${error.message}`);
-    console.error(`Exited with code: ${error.code}`);
-  }
-
-  // Cargo add wasm-bindgen
-  const { error2 } = await exec(`cd ${filePath} && cargo add wasm-bindgen`);
-  if (error2) {
-    console.error(`Failed to add wasm-bindgen: ${error2.message}`);
-    console.error(`Exited with code: ${error2.code}`);
-  }
+  const fileName = await createRandomRustProjectWithData(data);
 
   // Replace lib.rs with file contents
+  setFileData(fileName, data);
 
   // Compile to wasm
+  await compileRustProject(fileName);
+
+  return fileName;
 }
 
 export async function createRandomRustProjectWithData(
@@ -60,43 +47,50 @@ export async function createRandomRustProjectWithData(
   filePath = "files"
 ) {
   // Generate random project name
+  const nanoid = customAlphabet(lowercase, 10);
   const fileName = nanoid();
+  console.log("File name: ", fileName);
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  const path = join(__dirname, "..", filePath, fileName);
+  const path = join(__dirname, "..", filePath);
+  const fullFilePath = join(path, fileName);
+  console.log("Full file path; ", fullFilePath);
+  console.log("File name: ", fileName);
 
   // Create new rust project
-  const { error } = exec(`cargo new --lib ${path}`);
-
-  // Add wasm-bindgen
-  console.log("path: ", path);
-  // TODO - Find a better way to make this async rather than an
-  // arbitrary timeout while `exec` runs
-  await new Promise((r) => setTimeout(r, 100));
-  appendFileSync(`${path}/Cargo.toml`, '[lib]\ncrate-type = ["cdylib"]');
   process.chdir(path);
-  // TODO - Could speed this up by appending to Cargo.toml
-  // This is perhaps more stable as appending could break if the
-  // Cargo.toml file is not formatted correctly
-  const { error2 } = exec(`cargo add wasm-bindgen`);
-  if (error2) {
-    console.error(`Failed to add wasm-bindgen: ${error2.message}`);
-    console.error(`Exited with code: ${error2.code}`);
-  }
-  await new Promise((r) => setTimeout(r, 100));
-
-  // Replace lib.rs with file contents
-  const libPath = join(path, "src", "lib.rs");
-  // TODO - This could be passed in from the client
-  // When a user selects `Rust`, the template would add the
-  // necessary boilerplate and this would only add the user's
-  // file to the random project
-  const wasmHeader = "use wasm_bindgen::prelude::*;\n\n";
-  data = wasmHeader + data;
-  writeFileSync(libPath, data);
-
-  console.log("File name: ", fileName);
+  await new Promise((resolve, reject) => {
+    exec(`wasm-pack new ${fileName}`, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
   return fileName;
 }
+
+function setFileData(fileName, data) {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", "files", fileName, "src", "lib.rs");
+  writeFileSync(path, data);
+}
+
+async function compileRustProject(fileName) {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", "files", fileName);
+  process.chdir(path);
+  await new Promise((resolve, reject) => {
+    exec(`wasm-pack build`, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
+
 /*
  * @param {string} dirPath - The path to the directory to create
  */
