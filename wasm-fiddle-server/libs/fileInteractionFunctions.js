@@ -1,7 +1,8 @@
 import { exec } from "child_process";
 import { mkdirSync, writeFileSync, access, watch, constants } from "fs";
 import { dirname, join } from "path";
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
+import { lowercase } from "nanoid-dictionary";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -26,6 +27,68 @@ export async function compileToWasm(filePath, language, fileType = "js") {
     console.error(`Failed to compile: ${error.message}`);
     console.error(`Exited with code: ${error.code}`);
   }
+}
+
+export async function compileRustToWasm(data) {
+  // Create new rust project
+  const fileName = await createRandomRustProjectWithData(data);
+
+  // Replace lib.rs with file contents
+  setFileData(fileName, data);
+
+  // Compile to wasm
+  await compileRustProject(fileName);
+
+  return fileName;
+}
+
+export async function createRandomRustProjectWithData(
+  data,
+  filePath = "files"
+) {
+  // Generate random project name
+  const nanoid = customAlphabet(lowercase, 10);
+  const fileName = nanoid();
+  console.log("File name: ", fileName);
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", filePath);
+  const fullFilePath = join(path, fileName);
+  console.log("Full file path; ", fullFilePath);
+  console.log("File name: ", fileName);
+
+  // Create new rust project
+  process.chdir(path);
+  await new Promise((resolve, reject) => {
+    exec(`wasm-pack new ${fileName}`, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+  return fileName;
+}
+
+function setFileData(fileName, data) {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", "files", fileName, "src", "lib.rs");
+  writeFileSync(path, data);
+}
+
+async function compileRustProject(fileName) {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", "files", fileName);
+  process.chdir(path);
+  await new Promise((resolve, reject) => {
+    exec(`wasm-pack build`, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 }
 
 /*
