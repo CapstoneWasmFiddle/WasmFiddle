@@ -20,13 +20,16 @@ import path from "path";
  */
 export async function compileToWasm(filePath, language, fileType = "js") {
   const suffix = matchLanguage(language);
-  const command = `emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
-
-  const { error } = await exec(command);
-  if (error) {
-    console.error(`Failed to compile: ${error.message}`);
-    console.error(`Exited with code: ${error.code}`);
-  }
+  await new Promise((resolve, reject) => {
+    const command = `emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
+    exec(command, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 }
 
 export async function compileRustToWasm(data) {
@@ -114,7 +117,8 @@ export function createFile(filePath, fileContents) {
     * @param {string} fileType - The type of file to create
  */
 export function createRandomFileWithData(data, language, filePath = "files") {
-  let fileName = nanoid();
+  const nanoid = customAlphabet(lowercase, 10);
+  const fileName = nanoid();
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const suffix = matchLanguage(language);
   const fullName = fileName + "." + suffix;

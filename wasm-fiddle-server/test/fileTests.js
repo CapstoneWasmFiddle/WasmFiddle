@@ -17,7 +17,7 @@ chai.use(chaiFs);
 
 describe("compileToJs", () => {
   it("should compile a simple wasm file", async () => {
-    await compileToWasm("./test/testFiles/hello_world.c", "wasm");
+    await compileToWasm("./test/testFiles/hello_world", "c");
   });
 
   it("should create a new directory", async () => {
@@ -82,7 +82,7 @@ describe("compileToJs", () => {
     const path = join(__dirname, "..", "files", fileName, "src");
     await new Promise((r) => setTimeout(r, 1000));
     console.log(path);
-    chai.expect(path).to.be.a.directory().with.files(["lib.rs"]);
+    chai.expect(path).to.be.a.directory().with.files(["lib.rs", "utils.rs"]);
     // rmSync(path, { recursive: true });
   });
 
@@ -95,7 +95,7 @@ describe("compileToJs", () => {
     console.log(toml);
     await new Promise((r) => setTimeout(r, 1000));
     chai.expect(toml).to.be.a.file();
-  });
+  }).timeout(15000);
 
   it("Should compile a rust project to wasm", async () => {
     const fileName = await compileRustToWasm(
