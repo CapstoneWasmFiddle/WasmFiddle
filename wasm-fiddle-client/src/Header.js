@@ -101,7 +101,7 @@ export default function Header() {
               <Dialog open={openWidget}>
                 <DialogTitle data-cy="headerWidgetDialogTitle">Embedable Widget</DialogTitle>
                 <DialogContent>
-
+                  <iframe src="https://capstonewasmfiddle.github.io/" height="600" width="400" title="Widget"></iframe>
                 </DialogContent>
                 <DialogActions>
                   <Button onClick={toggleWidgetState} color="inherit" data-cy="headerWidgetDialogClose">
