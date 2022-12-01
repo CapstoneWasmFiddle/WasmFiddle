@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import express from "express";
-import { existsSync } from "fs";
+import { existsSync, fstat, readFile } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import {
@@ -40,11 +40,29 @@ app.post("/compile", async (req, res) => {
 
   // wait 7 seconds for compilation
   let test = checkExistsWithTimeout(__dirname + `/files/${fn}.wasm`, 7000);
-  test
-    .then(() => {
-      console.log("Successfully compiled");
+  test.then(() => {
+    console.log("Successfully compiled");
+    
+    // send as file or as text
+    if(req.body.sendAsFile){
       res.sendFile(__dirname + `/files/${fn}.wasm`);
-    })
+    } else {
+      readFile(__dirname + `/files/${fn}.wasm`, function (err, data){
+        if (!err){
+          console.log("Sent as text");
+          res.set('Content-Type', 'text/plain');
+          res.status(200);
+          res.send(data);
+        }
+        else {
+          res.set('Content-Type', 'text/plain');
+          res.status(500);
+          res.send("Could not send as text");
+        }
+      });
+    }
+    
+  })
     .catch((err) => {
       console.error(`Could not find file - ${err.message}`);
       res.send("Unable to compile within 7000ms");
