@@ -8,6 +8,7 @@ import Select from '@mui/material/Select';
 import Grid from '@mui/material/Grid';
 import CodeMirror from '@uiw/react-codemirror';
 import DownloadIcon from '@mui/icons-material/Download';
+import axios from 'axios';
 
 
 export default function CodeEditor() {
@@ -17,10 +18,27 @@ export default function CodeEditor() {
     const [buildError, setBuildError] = React.useState(false);
     const [language, setLanguage] = React.useState("");
     const [compilation, setCompilation] = React.useState("");
-    const onChange = React.useCallback((value, viewUpdate) => {
-        console.log('value: ', value);
-    }, []);
+    const [code, setCode] = React.useState("");
+    const [wasm, setWasm] = React.useState("");
     
+    const sendPost = (e) =>{
+
+        axios.post('http://3.136.237.101:8000/compile', {
+            code: code,
+            language: language
+        })
+        .then(function (response) {
+            setWasm(response);
+
+            let index = response.lastIndexOf("(i32.const ");
+            let val = response.indexOf(")", index);
+            setOutput(response.slice(index, val));
+            
+        })
+        .catch(function (error) {
+            console.log(error)
+    })};
+
     const toggleBuildState = () => {
         if (language !== "wasm" && language !== "wat" && compilation !== ""){
             setBuildError(false);
@@ -39,7 +57,12 @@ export default function CodeEditor() {
         if (build === true){
             setBuild(!build);
             setRun(!run);
+            sendPost();
         }
+    }
+
+    const handleCode = (event) => {
+        setCode(event.target.value);
     }
 
     const handleLanguage = (event) => {
@@ -118,7 +141,7 @@ export default function CodeEditor() {
                         {language !== "wat" && language !== "wasm" && 
                             <CodeMirror
                                 height="300px"
-                                onChange={onChange}
+                                onChange={handleCode}
                                 placeholder="You can input C, C++ or Rust code here! Choose it in the dropdown along with a compilation option!"
                                 data-cy="mainInputEditor"
                             />
@@ -126,7 +149,7 @@ export default function CodeEditor() {
                         {(language === "wat" || language === "wasm") &&
                             <CodeMirror
                                 height="300px"
-                                onChange={onChange}
+                                onChange={handleCode}
                                 placeholder="Please enter your Wat or Wasm code in the right input box!"
                                 editable={false}
                                 data-cy="mainInputEditor"
@@ -137,7 +160,7 @@ export default function CodeEditor() {
                         {(language === "wat" || language === "wasm") && 
                             <CodeMirror
                             height="300px"
-                            onChange={onChange}
+                            onChange={handleCode}
                             placeholder="You do not need a compilation option. Please write your Wat or Wasm code here."
                             data-cy="wasmEditor"
                             />
@@ -145,9 +168,10 @@ export default function CodeEditor() {
                         {language !== "wat" && language !== "wasm" &&
                             <CodeMirror
                             height="300px"
-                            onChange={onChange}
+                            onChange={handleCode}
                             placeholder="We will display the Wat or Wasm code here."
                             editable={false}
+                            onUpdate={wasm}
                             data-cy="wasmEditor"
                             />
                         }
@@ -170,7 +194,7 @@ export default function CodeEditor() {
                         <CodeMirror
                             height="300px"
                             value={output}
-                            editable={false}
+                            editable={true}
                             onUpdate={output}
                             data-cy="outputEditor"
                         />
