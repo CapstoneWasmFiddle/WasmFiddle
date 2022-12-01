@@ -1,7 +1,8 @@
 import { exec } from "child_process";
-import { mkdirSync, writeFileSync, unlink, access, watch, constants} from "fs";
+import { mkdirSync, writeFileSync, access, watch, constants } from "fs";
 import { dirname, join } from "path";
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
+import { lowercase } from "nanoid-dictionary";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -19,20 +20,78 @@ import path from "path";
  */
 export async function compileToWasm(filePath, language, fileType = "js") {
   const suffix = matchLanguage(language);
-  const command = `docker run --platform linux/amd64 \
-    --rm \
-    -v $(pwd):/src \
-    -u $(id -u):$(id -g) \
-    emscripten/emsdk \
-    emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
+  await new Promise((resolve, reject) => {
+    const command = `emcc ${filePath}.${suffix} -o ${filePath}.${fileType}`;
+    exec(command, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
 
-  const { error, stdout, stderr } = await exec(command);
-  if (error) {
-    console.error(`Failed to compile: ${error.message}`);
-    console.error(`Exited with code: ${error.code}`);
-  }
-  // console.log("stdout: ", stdout);
-  // console.log("stderr: ", stderr);
+export async function compileRustToWasm(data) {
+  // Create new rust project
+  const fileName = await createRandomRustProjectWithData(data);
+
+  // Replace lib.rs with file contents
+  setFileData(fileName, data);
+
+  // Compile to wasm
+  await compileRustProject(fileName);
+
+  return fileName;
+}
+
+export async function createRandomRustProjectWithData(
+  data,
+  filePath = "files"
+) {
+  // Generate random project name
+  const nanoid = customAlphabet(lowercase, 10);
+  const fileName = nanoid();
+  console.log("File name: ", fileName);
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", filePath);
+  const fullFilePath = join(path, fileName);
+  console.log("Full file path; ", fullFilePath);
+  console.log("File name: ", fileName);
+
+  // Create new rust project
+  process.chdir(path);
+  await new Promise((resolve, reject) => {
+    exec(`wasm-pack new ${fileName}`, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+  return fileName;
+}
+
+function setFileData(fileName, data) {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", "files", fileName, "src", "lib.rs");
+  writeFileSync(path, data);
+}
+
+async function compileRustProject(fileName) {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const path = join(__dirname, "..", "files", fileName);
+  process.chdir(path);
+  await new Promise((resolve, reject) => {
+    exec(`wasm-pack build`, (error, stdout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 }
 
 /*
@@ -58,7 +117,8 @@ export function createFile(filePath, fileContents) {
     * @param {string} fileType - The type of file to create
  */
 export function createRandomFileWithData(data, language, filePath = "files") {
-  let fileName = nanoid();
+  const nanoid = customAlphabet(lowercase, 10);
+  const fileName = nanoid();
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const suffix = matchLanguage(language);
   const fullName = fileName + "." + suffix;
@@ -78,36 +138,37 @@ export function matchLanguage(language) {
 }
 
 /*
-  * @param {string} filePath - The path to the compiled file 
-  * @param {int} fileContents - Number of ms to wait for file to be compiled
-  * Taken from 
-  * https://stackoverflow.com/questions/26165725/nodejs-check-file-exists-if-not-wait-till-it-exist
-  */
+ * @param {string} filePath - The path to the compiled file
+ * @param {int} fileContents - Number of ms to wait for file to be compiled
+ * Taken from
+ * https://stackoverflow.com/questions/26165725/nodejs-check-file-exists-if-not-wait-till-it-exist
+ */
 export function checkExistsWithTimeout(filePath, timeout) {
   console.log(filePath);
   return new Promise(function (resolve, reject) {
+    var timer = setTimeout(function () {
+      watcher.close();
+      reject(
+        new Error("File did not exists and was not created during the timeout.")
+      );
+    }, timeout);
 
-      var timer = setTimeout(function () {
-          watcher.close();
-          reject(new Error('File did not exists and was not created during the timeout.'));
-      }, timeout);
+    access(filePath, constants.R_OK, function (err) {
+      if (!err) {
+        clearTimeout(timer);
+        watcher.close();
+        resolve();
+      }
+    });
 
-      access(filePath, constants.R_OK, function (err) {
-          if (!err) {
-              clearTimeout(timer);
-              watcher.close();
-              resolve();
-          }
-      });
-
-      var dir = path.dirname(filePath);
-      var basename = path.basename(filePath);
-      var watcher = watch(dir, function (eventType, filename) {
-          if (eventType === 'rename' && filename === basename) {
-              clearTimeout(timer);
-              watcher.close();
-              resolve();
-          }
-      });
+    var dir = path.dirname(filePath);
+    var basename = path.basename(filePath);
+    var watcher = watch(dir, function (eventType, filename) {
+      if (eventType === "rename" && filename === basename) {
+        clearTimeout(timer);
+        watcher.close();
+        resolve();
+      }
+    });
   });
 }

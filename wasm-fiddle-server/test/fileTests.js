@@ -2,8 +2,10 @@ import {
   compileToWasm,
   createFile,
   createRandomFileWithData,
+  createRandomRustProjectWithData,
   createDir,
   matchLanguage,
+  compileRustToWasm,
 } from "../libs/fileInteractionFunctions.js";
 import { dirname, join } from "path";
 import { rmdirSync, rmSync } from "fs";
@@ -12,12 +14,11 @@ import chai from "chai";
 import chaiFs from "chai-fs";
 
 chai.use(chaiFs);
- 
+
 describe("compileToJs", () => {
   it("should compile a simple wasm file", async () => {
-    await compileToWasm("./test/testFiles/hello_world.c", "wasm");
+    await compileToWasm("./test/testFiles/hello_world", "c");
   });
-  
 
   it("should create a new directory", async () => {
     const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -74,4 +75,36 @@ describe("compileToJs", () => {
     }
     rmSync(path);
   });
+
+  it("Should create a random rust library", async () => {
+    const fileName = await createRandomRustProjectWithData("Hello World!");
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const path = join(__dirname, "..", "files", fileName, "src");
+    await new Promise((r) => setTimeout(r, 1000));
+    console.log(path);
+    chai.expect(path).to.be.a.directory().with.files(["lib.rs", "utils.rs"]);
+    // rmSync(path, { recursive: true });
+  });
+
+  it("Should modify a rust project to contain the given file data", async () => {
+    const fileName = await compileRustToWasm(
+      'use wasm_bindgen::prelude::*;\n\nfn main() {\n\tprintln!("Hello World!");\n}'
+    );
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const toml = join(__dirname, "..", "files", fileName, "Cargo.toml");
+    console.log(toml);
+    await new Promise((r) => setTimeout(r, 1000));
+    chai.expect(toml).to.be.a.file();
+  }).timeout(15000);
+
+  it("Should compile a rust project to wasm", async () => {
+    const fileName = await compileRustToWasm(
+      'use wasm_bindgen::prelude::*;\n\nfn main() {\n\tprintln!("Hello World!");\n}'
+    );
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const toml = join(__dirname, "..", "files", fileName, "Cargo.toml");
+    console.log(toml);
+    await new Promise((r) => setTimeout(r, 1000));
+    chai.expect(toml).to.be.a.file();
+  }).timeout(15000);
 });
